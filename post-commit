@@ -1,8 +1,55 @@
 #!/bin/sh
+# Commit hook to load modified XML files to the configured BaseX repository
 #
-# An example hook script that is called after a successful
-# commit is made.
+# Needs to handle the following cases:
 #
-# To enable this hook, rename this file to "post-commit".
+# Addition of new files or updates to existing files
+# Deletion of existing files
+# Note that the --diff-filter=R (renamed) option doesn't
+# seem to actually report renames, so renamed files are
+# reported as a delete+add.
+#
+#
 
-echo "hey joe I'm a commit hook!"
+# BaseX connection parameters:
+
+baseXUser="admin"
+baseXPW="admin"
+basexPort="1984"
+basexServer="localhost"
+basexDatabase="sample-project"
+basexOptions="-U ${baseXUser} -P ${baseXPW} -p ${basexPort} -n ${basexServer}"
+
+# Get the list of changed files.
+# Each line is of the form
+# {status}   {path}
+#
+# E.g.:
+#
+# M       documentation/topics/tools-basex.dita
+#
+
+# Current directory is the repository root:
+
+topDir=`pwd`
+
+addOrUpdate="git diff HEAD^ HEAD --name-only --diff-filter=AM"
+
+# echo "Adding/Updating files:"
+for line in `${addOrUpdate}`; do
+   cmd="basexclient -c \"OPEN ${basexDatabase};REPLACE ${line} ${topDir}/${line};EXIT\" ${basexOptions}"
+   echo "Running cmd: ${cmd}"   
+   $($cmd)
+   # echo "Done."
+done
+
+deleted="git diff HEAD^ HEAD --name-only --diff-filter=D"
+# echo "Deleting files:"
+for line in `${deleted}`; do 
+   cmd="basexclient ${basexOptions} -c \"open ${basexDatabase};delete ${line};exit\""
+   echo "Running cmd: ${cmd}"   
+   # `${cmd}`
+   # echo "Done."
+done
+
+
