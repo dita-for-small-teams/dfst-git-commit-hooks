@@ -13,6 +13,8 @@
 
 # BaseX connection parameters:
 
+# FIXME: Get these from the environment or a configuration file somewhere.
+
 baseXUser="admin"
 baseXPW="admin"
 basexPort="1984"
