@@ -18,7 +18,7 @@ baseXPW="admin"
 basexPort="1984"
 basexServer="localhost"
 basexDatabase="sample-project"
-basexOptions=( -U $baseXUser -P $baseXPW -p $basexPort -n $basexServer )
+basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
 
 # Get the list of changed files.
 # Each line is of the form
@@ -31,25 +31,25 @@ basexOptions=( -U $baseXUser -P $baseXPW -p $basexPort -n $basexServer )
 
 # Current directory is the repository root:
 
-topDir=`pwd`
+topDir=$PWD
 
 addOrUpdate() { git diff HEAD^ HEAD --name-only --diff-filter=AM; }
 
 # echo "Adding/Updating files:"
-while read -r line; do
+addOrUpdate | while read -r line; do
    cmd=( basexclient -c "OPEN $basexDatabase; REPLACE $line $topDir/$line; EXIT" "${basexOptions[@]}" )
    # printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
-done < <(addOrUpdate)
+done 
 
 deleted() { git diff HEAD^ HEAD --name-only --diff-filter=D; }
 
 # echo "Deleing files:"
-while read -r line; do
+deleted | while read -r line; do
    cmd=( basexclient -c "OPEN $basexDatabase; DELETE $line; EXIT" "${basexOptions[@]}" )
    # printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
-done < <(deleted)
+done 
 
 
 
