@@ -11,6 +11,7 @@
 #
 #
 
+
 # BaseX connection parameters:
 
 # FIXME: Get these from the environment or a configuration file somewhere.
@@ -19,7 +20,6 @@ baseXUser="admin"
 baseXPW="admin"
 basexPort="1984"
 basexServer="localhost"
-basexDatabase="sample-project"
 basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
 
 # Get the list of changed files.
@@ -35,11 +35,22 @@ basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
 
 topDir=$PWD
 
+
+branchName=$(git rev-parse --abbrev-ref HEAD)
+
+# Remap characters no allowed in BaseX database names:
+
+slash="/"; tilde='~'; dot="."; underscore="_"
+branchName=${branchName//$slash/$tilde}
+branchName=${branchName//$dot/$underscore}
+
+basexDatabase="dfst_${branchName}"
+
 addOrUpdate() { git diff HEAD^ HEAD --name-only --diff-filter=AM; }
 
 # echo "Adding/Updating files:"
 addOrUpdate | while read -r line; do
-   cmd=( basexclient -c "OPEN $basexDatabase; REPLACE $line $topDir/$line; EXIT" "${basexOptions[@]}" )
+   cmd=( basexclient -c "CHECK $basexDatabase; OPEN $basexDatabase; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
 done 
@@ -48,10 +59,7 @@ deleted() { git diff HEAD^ HEAD --name-only --diff-filter=D; }
 
 # echo "Deleing files:"
 deleted | while read -r line; do
-   cmd=( basexclient -c "OPEN $basexDatabase; DELETE $line; EXIT" "${basexOptions[@]}" )
+   cmd=( basexclient -c "OPEN $basexDatabase; DELETE $line" "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
 done 
-
-
-
