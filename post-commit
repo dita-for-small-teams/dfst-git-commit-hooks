@@ -13,6 +13,9 @@
 # reported as a delete+add.
 #
 #
+# FIXME: Add a file that captures the current git commit so we know
+# what the last commit was so we know if the current branch is or is
+# not already reflected in the database.
 
 # BaseX connection parameters:
 
@@ -23,15 +26,6 @@ baseXPW="admin"
 basexPort="1984"
 basexServer="localhost"
 basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
-
-# Get the list of changed files.
-# Each line is of the form
-# {status}   {path}
-#
-# E.g.:
-#
-# M       documentation/topics/tools-basex.dita
-#
 
 # Current directory is the repository root:
 

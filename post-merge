@@ -9,8 +9,9 @@
 # seem to actually report renames, so renamed files are
 # reported as a delete+add.
 #
-#
-
+# FIXME: Add a file that captures the current git commit so we know
+# what the last commit was so we know if the current branch is or is
+# not already reflected in the database.
 
 # BaseX connection parameters:
 
