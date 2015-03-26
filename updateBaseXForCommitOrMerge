@@ -1,0 +1,54 @@
+#!/bin/bash
+# 
+# Common code to do add/replace/delete of files modified from
+# previous git commit.
+#
+# This script is intended to be called from git post-commit and
+# post-merge hooks.
+#
+# NOTE: This script depends on having the BaseX server connection
+# details set in the .basex configuration file.
+
+branchCurrent=$1
+branchPrev=$2
+
+# Current directory is the repository root:
+
+topDir=$PWD
+
+branchName=$(git rev-parse --abbrev-ref HEAD)
+
+
+# Remap characters no allowed in BaseX database names:
+
+slash="/"; tilde='~'; dot="."; underscore="_"
+branchName=${branchName//$slash/$tilde}
+branchName=${branchName//$dot/$underscore}
+
+basexDatabase="dfst_${branchName}"
+
+addOrUpdate() { git diff ${branchPrev} ${branchCurrent} --name-only --diff-filter=AM; }
+
+# echo "Adding/Updating files:"
+addOrUpdate | while read -r line; do
+   cmd=( basexclient -c "CHECK $basexDatabase; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
+   printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
+   "${cmd[@]}"
+done 
+
+deleted() { git diff HEAD^ HEAD --name-only --diff-filter=D; }
+
+# echo "Deleing files:"
+deleted | while read -r line; do
+   cmd=( basexclient -c "OPEN $basexDatabase; DELETE $line" "${basexOptions[@]}" )
+   printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
+   "${cmd[@]}"
+done 
+
+# If the foregoing succeed, record the current git state:
+
+bash ${PWD}/.git/hooks/recordGitStateDetails
+
+#
+# End of script
+#

@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+# Post-checkout hook
+#
+bash ${PWD}/.git/hooks/basexLoadOrUpdateBranch

@@ -1,0 +1,73 @@
+#!/bin/bash
+# 
+# Reacts to post-checkout or other git action that results in a complete
+# change in branch. Determines if the current branch and commit is current
+# in BaseX and, if not, loads the current branch. If the current branch is
+# is one commit behind the current branch, does the normal post-commit update.
+#
+# This script is intended to be called from a git post-checkout hook 
+#
+
+# BaseX connection parameters:
+#
+# FIXME: Check that there is a .basex file that sets the
+# connection parameters. We depend on that to avoid having
+# to get or hard-code connection details in the script
+
+# 
+# Capture the current git state for this branch
+#
+
+# Current directory is the repository root:
+
+topDir=$PWD
+
+branchName=$(git rev-parse --abbrev-ref HEAD)
+
+# Remap characters no allowed in BaseX database names:
+
+slash="/"; tilde='~'; dot="."; underscore="_"
+branchName=${branchName//$slash/$tilde}
+branchName=${branchName//$dot/$underscore}
+
+dbName="dfst_${branchName}"
+
+$(basex -c "open ${dbName}" > /dev/null)
+dbExistsStatus=$?
+
+if [[ "$dbExistsStatus" = "0" ]] 
+   then {
+      echo "Database ${dbName} exists, updating to BaseX..."
+      # Get the current branch and commit for the database (if it exists)
+      dbCommitHash=$(basex -c "open ${dbName}; xquery string(/dfst_metadata/gitstate/commit)")
+      commitHash=$(git rev-parse HEAD)
+      if [[ $commitHash = $dbCommitHash ]] 
+         then {
+           # Do nothing, assume database is up to date. We could do a sanity check here,
+           # but not sure it's worth the effort.
+           :
+         } 
+         else {
+           bash ${GIT_DIR}/hooks/updateBaseXForCommitOrMerge HEAD ${dbCommitHash}
+         }
+      fi
+      bash ${GIT_DIR}/hooks/recordGitStateDetails      
+   } 
+   else {
+      # See BaseX issue https://github.com/BaseXdb/basex/issues/1112
+      # Loading the git state details first in order to work around this bug.
+      # Ideally we should only record the state if the load succeeds, but we
+      # need a doc with no namespace decls as first in the datagase.
+      
+      echo "No database ${dbName}, loading branch to BaseX..."
+      # NOTE: recordGitStateDetails does a CHECK on the database so we don't
+      # need to create it separately.
+      bash ${GIT_DIR}/hooks/recordGitStateDetails      
+      echo "Running basexclient -c \"createfilter *.xml,*.dita,*.ditamap,*.ditaval; add ${dbName} $PWD\""
+      $(basexclient -c "open ${dbName}; set createfilter *.xml,*.dita,*.ditamap,*.ditaval; set skipcorrupt true; add $PWD")
+   }
+  fi
+
+#
+# End of script
+#

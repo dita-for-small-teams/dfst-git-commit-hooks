@@ -1,66 +1,9 @@
 #!/bin/bash
-# Commit hook to load modified XML files to the configured BaseX repository
 #
-# Needs to handle the following cases:
+# Update BaseX with changed or modified files
 #
-# Addition of new files or updates to existing files
-# Deletion of existing files
-# Note that the --diff-filter=R (renamed) option doesn't
-# seem to actually report renames, so renamed files are
-# reported as a delete+add.
+# This is a bash script:
+bash ${PWD}/.git/hooks/updateBaseXForCommitOrMerge HEAD 'HEAD^'
 #
-# FIXME: Add a file that captures the current git commit so we know
-# what the last commit was so we know if the current branch is or is
-# not already reflected in the database.
-
-# BaseX connection parameters:
-
-# FIXME: Get these from the environment or a configuration file somewhere.
-
-baseXUser="admin"
-baseXPW="admin"
-basexPort="1984"
-basexServer="localhost"
-basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
-
-# Get the list of changed files.
-# Each line is of the form
-# {status}   {path}
+# End of script
 #
-# E.g.:
-#
-# M       documentation/topics/tools-basex.dita
-#
-
-# Current directory is the repository root:
-
-topDir=$PWD
-
-
-branchName=$(git rev-parse --abbrev-ref HEAD)
-
-# Remap characters no allowed in BaseX database names:
-
-slash="/"; tilde='~'; dot="."; underscore="_"
-branchName=${branchName//$slash/$tilde}
-branchName=${branchName//$dot/$underscore}
-
-basexDatabase="dfst_${branchName}"
-
-addOrUpdate() { git diff HEAD^ HEAD --name-only --diff-filter=AM; }
-
-# echo "Adding/Updating files:"
-addOrUpdate | while read -r line; do
-   cmd=( basexclient -c "CHECK $basexDatabase; OPEN $basexDatabase; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
-   printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
-   "${cmd[@]}"
-done 
-
-deleted() { git diff HEAD^ HEAD --name-only --diff-filter=D; }
-
-# echo "Deleing files:"
-deleted | while read -r line; do
-   cmd=( basexclient -c "OPEN $basexDatabase; DELETE $line" "${basexOptions[@]}" )
-   printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
-   "${cmd[@]}"
-done 

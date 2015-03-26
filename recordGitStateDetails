@@ -1,0 +1,44 @@
+#!/bin/bash
+# 
+# Get the current git details:
+#
+# branch name
+# commit
+#
+baseXUser="admin"
+baseXPW="admin"
+basexPort="1984"
+basexServer="localhost"
+basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
+
+branchName=$(git rev-parse --abbrev-ref HEAD)
+commitHash=$(git rev-parse HEAD)
+
+slash="/"; tilde='~'; dot="."; underscore="_"
+branchName=${branchName//$slash/$tilde}
+branchName=${branchName//$dot/$underscore}
+
+basexDatabase="dfst_${branchName}"
+
+# Note: literal newlines in this data messes up the command for 
+# reasons I don't understand.
+xmlData="<dfst_metadata>\
+<gitstate>\
+<branch>${branchName}</branch>\
+<commit>${commitHash}</commit>\
+</gitstate>\
+</dfst_metadata>"
+
+#baseXCommands=( "\"CHECK $basexDatabase; OPEN $basexDatabase; REPLACE '.dfst/metadata.xml' '${xmlData}'\"" )
+#echo "baseXCommands=${baseXCommands}"
+
+metadataFilePath="dfst/metadata.xml"
+
+cmd=( basexclient -c "CHECK $basexDatabase; OPEN $basexDatabase; REPLACE $metadataFilePath $xmlData" "${basexOptions[@]}" )
+
+   printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
+   "${cmd[@]}"
+   
+# 
+# End of script
+#   
