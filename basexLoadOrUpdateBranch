@@ -22,6 +22,11 @@
 
 topDir=$PWD
 
+# NOTE: We're assuming that the user would not have two clones of the
+# same repo with the same directory names. Anything more sophsiticated
+# would require a per-repo configuration of the name to use for the
+# BaseX database name.
+
 branchName=$(git rev-parse --abbrev-ref HEAD)
 
 # Remap characters no allowed in BaseX database names:
@@ -30,7 +35,8 @@ slash="/"; tilde='~'; dot="."; underscore="_"
 branchName=${branchName//$slash/$tilde}
 branchName=${branchName//$dot/$underscore}
 
-dbName="dfst_${branchName}"
+repoName=${PWD##*/}
+dbName="dfst_${repoName}_${branchName}"
 
 $(basex -c "open ${dbName}" > /dev/null)
 dbExistsStatus=$?

@@ -25,13 +25,14 @@ slash="/"; tilde='~'; dot="."; underscore="_"
 branchName=${branchName//$slash/$tilde}
 branchName=${branchName//$dot/$underscore}
 
-basexDatabase="dfst_${branchName}"
+repoName=${PWD##*/}
+dbName="dfst_${repoName}_${branchName}"
 
 addOrUpdate() { git diff ${branchPrev} ${branchCurrent} --name-only --diff-filter=AM; }
 
 # echo "Adding/Updating files:"
 addOrUpdate | while read -r line; do
-   cmd=( basexclient -c "CHECK $basexDatabase; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
+   cmd=( basexclient -c "CHECK $dbName; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
 done 
@@ -40,7 +41,7 @@ deleted() { git diff HEAD^ HEAD --name-only --diff-filter=D; }
 
 # echo "Deleing files:"
 deleted | while read -r line; do
-   cmd=( basexclient -c "OPEN $basexDatabase; DELETE $line" "${basexOptions[@]}" )
+   cmd=( basexclient -c "OPEN $dbName; DELETE $line" "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
 done 

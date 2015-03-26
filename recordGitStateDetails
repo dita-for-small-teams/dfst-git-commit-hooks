@@ -18,7 +18,8 @@ slash="/"; tilde='~'; dot="."; underscore="_"
 branchName=${branchName//$slash/$tilde}
 branchName=${branchName//$dot/$underscore}
 
-basexDatabase="dfst_${branchName}"
+repoName=${PWD##*/}
+dbName="dfst_${repoName}_${branchName}"
 
 # Note: literal newlines in this data messes up the command for 
 # reasons I don't understand.
@@ -29,12 +30,12 @@ xmlData="<dfst_metadata>\
 </gitstate>\
 </dfst_metadata>"
 
-#baseXCommands=( "\"CHECK $basexDatabase; OPEN $basexDatabase; REPLACE '.dfst/metadata.xml' '${xmlData}'\"" )
+#baseXCommands=( "\"CHECK $dbName; OPEN $dbName; REPLACE '.dfst/metadata.xml' '${xmlData}'\"" )
 #echo "baseXCommands=${baseXCommands}"
 
 metadataFilePath="dfst/metadata.xml"
 
-cmd=( basexclient -c "CHECK $basexDatabase; OPEN $basexDatabase; REPLACE $metadataFilePath $xmlData" "${basexOptions[@]}" )
+cmd=( basexclient -c "CHECK $dbName; OPEN $dbName; REPLACE $metadataFilePath $xmlData" "${basexOptions[@]}" )
 
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
