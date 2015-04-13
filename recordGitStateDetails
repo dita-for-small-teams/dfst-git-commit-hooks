@@ -29,13 +29,14 @@ xmlData="<dfst_metadata>\
 <commit>${commitHash}</commit>\
 </gitstate>\
 </dfst_metadata>"
+echo "xmlData=${xmlData}"
 
-#baseXCommands=( "\"CHECK $dbName; OPEN $dbName; REPLACE '.dfst/metadata.xml' '${xmlData}'\"" )
+#baseXCommands=( "\"CHECK $dbName; REPLACE '.dfst/metadata.xml' '${xmlData}'\"" )
 #echo "baseXCommands=${baseXCommands}"
 
 metadataFilePath="dfst/metadata.xml"
 
-cmd=( basexclient -c "CHECK $dbName; OPEN $dbName; REPLACE $metadataFilePath $xmlData" "${basexOptions[@]}" )
+cmd=( basexclient -c "CHECK $dbName; SET DTD false; REPLACE $metadataFilePath $xmlData" "${basexOptions[@]}" )
 
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"

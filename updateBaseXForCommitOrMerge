@@ -32,6 +32,7 @@ addOrUpdate() { git diff ${branchPrev} ${branchCurrent} --name-only --diff-filte
 
 # echo "Adding/Updating files:"
 addOrUpdate | while read -r line; do
+   echo "+ [INFO] Replacing ${line}..."
    cmd=( basexclient -c "CHECK $dbName; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
@@ -41,7 +42,7 @@ deleted() { git diff HEAD^ HEAD --name-only --diff-filter=D; }
 
 # echo "Deleing files:"
 deleted | while read -r line; do
-   cmd=( basexclient -c "OPEN $dbName; DELETE $line" "${basexOptions[@]}" )
+   cmd=( basexclient -c "CHECK $dbName; DELETE $line" "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
 done 
