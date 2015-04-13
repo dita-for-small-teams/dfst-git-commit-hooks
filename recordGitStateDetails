@@ -19,7 +19,7 @@ branchName=${branchName//$slash/$tilde}
 branchName=${branchName//$dot/$underscore}
 
 repoName=${PWD##*/}
-dbName="dfst_${repoName}_${branchName}"
+dbName="dfst^${repoName}^${branchName}"
 
 # Note: literal newlines in this data messes up the command for 
 # reasons I don't understand.

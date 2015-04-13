@@ -26,7 +26,7 @@ branchName=${branchName//$slash/$tilde}
 branchName=${branchName//$dot/$underscore}
 
 repoName=${PWD##*/}
-dbName="dfst_${repoName}_${branchName}"
+dbName="dfst^${repoName}^${branchName}"
 
 addOrUpdate() { git diff ${branchPrev} ${branchCurrent} --name-only --diff-filter=AM; }
 
