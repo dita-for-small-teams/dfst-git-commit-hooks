@@ -2,6 +2,7 @@
 # 
 # Get the current git details:
 #
+# repo name
 # branch name
 # commit
 #
@@ -25,6 +26,8 @@ dbName="dfst^${repoName}^${branchName}"
 # reasons I don't understand.
 xmlData="<dfst_metadata>\
 <gitstate>\
+<repodir>${PWD}</repodir>\
+<repo>${repoName}</repo>\
 <branch>${branchName}</branch>\
 <commit>${commitHash}</commit>\
 </gitstate>\
