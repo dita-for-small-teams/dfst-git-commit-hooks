@@ -19,7 +19,7 @@ topDir=$PWD
 branchName=$(git rev-parse --abbrev-ref HEAD)
 
 
-# Remap characters no allowed in BaseX database names:
+# Remap characters to those allowed in BaseX database names:
 
 slash="/"; tilde='~'; dot="."; underscore="_"
 branchName=${branchName//$slash/$tilde}

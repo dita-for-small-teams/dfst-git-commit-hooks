@@ -23,7 +23,7 @@ repoName=${PWD##*/}
 dbName="dfst^${repoName}^${branchName}"
 
 # Note: literal newlines in this data messes up the command for 
-# reasons I don't understand.
+# reasons I don't understand because my bash fu is weak.
 xmlData="<dfst_metadata>\
 <gitstate>\
 <repodir>${PWD}</repodir>\
@@ -37,7 +37,7 @@ echo "xmlData=${xmlData}"
 #baseXCommands=( "\"CHECK $dbName; REPLACE '.dfst/metadata.xml' '${xmlData}'\"" )
 #echo "baseXCommands=${baseXCommands}"
 
-metadataFilePath="dfst/metadata.xml"
+metadataFilePath=".dfst/metadata.xml"
 
 cmd=( basexclient -c "CHECK $dbName; SET DTD false; REPLACE $metadataFilePath $xmlData" "${basexOptions[@]}" )
 
