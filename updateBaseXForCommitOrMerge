@@ -27,13 +27,18 @@ branchName=${branchName//$dot/$underscore}
 
 repoName=${PWD##*/}
 dbName="dfst^${repoName}^${branchName}"
+metadataDbName="_dfst^metadata^${repoName}^${branchName}"
+
+# Ensure that the metadata database exists
+$(basexclient -c "CHECK ${metadataDbName};")
+# FIXME: Do we need to check the return status here? Probably.
 
 addOrUpdate() { git diff ${branchPrev} ${branchCurrent} --name-only --diff-filter=AM; }
 
 # echo "Adding/Updating files:"
 addOrUpdate | while read -r line; do
    echo "+ [INFO] Replacing ${line}..."
-   cmd=( basexclient -c "CHECK $dbName; REPLACE $line $topDir/$line" "${basexOptions[@]}" )
+   cmd=( basexclient -c "CHECK ${metadataDbName}; CHECK $dbName; REPLACE $line $topDir/$line; " "${basexOptions[@]}" )
    printf 'Running: '; printf '%q ' "${cmd[@]}"; printf '\n'
    "${cmd[@]}"
 done 

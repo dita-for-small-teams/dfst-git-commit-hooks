@@ -37,6 +37,11 @@ branchName=${branchName//$dot/$underscore}
 
 repoName=${PWD##*/}
 dbName="dfst^${repoName}^${branchName}"
+metadataDbName="_dfst^metadata^${repoName}^${branchName}"
+
+# Ensure that the metadata database exists
+$(basexclient -c "CHECK ${metadataDbName};")
+# FIXME: Do we need to check the return status here? Probably.
 
 $(basex -c "open ${dbName}" > /dev/null)
 dbExistsStatus=$?
@@ -55,7 +60,7 @@ if [[ "$dbExistsStatus" = "0" ]]
          } 
          else {
            bash ${GIT_DIR}/hooks/updateBaseXForCommitOrMerge HEAD ${dbCommitHash}
-         }
+         }      
       fi
       bash ${GIT_DIR}/hooks/recordGitStateDetails      
    } 
@@ -70,7 +75,7 @@ if [[ "$dbExistsStatus" = "0" ]]
       # need to create it separately.
       bash ${GIT_DIR}/hooks/recordGitStateDetails      
       echo "Running basexclient -c \"createfilter *.xml,*.dita,*.ditamap,*.ditaval; add ${dbName} $PWD\""
-      $(basexclient -c "open ${dbName}; set createfilter *.xml,*.dita,*.ditamap,*.ditaval; set skipcorrupt true; add $PWD")
+      $(basexclient -c "CHECK ${metadataDbName}; open ${dbName}; set createfilter *.xml,*.dita,*.ditamap,*.ditaval; set skipcorrupt true; add $PWD")
    }
   fi
 
