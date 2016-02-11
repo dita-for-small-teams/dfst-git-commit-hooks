@@ -39,18 +39,22 @@ repoName=${PWD##*/}
 dbName="dfst^${repoName}^${branchName}"
 metadataDbName="_dfst^metadata^${repoName}^${branchName}"
 
+# echo "metadataDBName=$metadataDbName"
 # Ensure that the metadata database exists
+# echo "doing \$(basexclient -c \"CHECK ${metadataDbName};\")"
 $(basexclient -c "CHECK ${metadataDbName};")
 # FIXME: Do we need to check the return status here? Probably.
-
-$(basex -c "open ${dbName}" > /dev/null)
+# echo "Got $? from database check"
+echo "Doing basexclient -c \"open ${dbName}\""
+$(basexclient -c "open ${dbName}" > /dev/null)
 dbExistsStatus=$?
+echo "dbExistsStatus=$dbExistsStatus"
 
 if [[ "$dbExistsStatus" = "0" ]] 
    then {
       echo "Database ${dbName} exists, updating to BaseX..."
       # Get the current branch and commit for the database (if it exists)
-      dbCommitHash=$(basex -c "open ${dbName}; xquery string(/dfst_metadata/gitstate/commit)")
+      dbCommitHash=$(basexclient  -c "open ${dbName}; xquery string(/dfst_metadata/gitstate/commit)")
       commitHash=$(git rev-parse HEAD)
       if [[ $commitHash = $dbCommitHash ]] 
          then {
@@ -74,7 +78,7 @@ if [[ "$dbExistsStatus" = "0" ]]
       # NOTE: recordGitStateDetails does a CHECK on the database so we don't
       # need to create it separately.
       bash ${GIT_DIR}/hooks/recordGitStateDetails      
-      echo "Running basexclient -c \"createfilter *.xml,*.dita,*.ditamap,*.ditaval; add ${dbName} $PWD\""
+      echo "pwd=$PWD"
       $(basexclient -c "CHECK ${metadataDbName}; open ${dbName}; set createfilter *.xml,*.dita,*.ditamap,*.ditaval; set skipcorrupt true; add $PWD")
    }
   fi
