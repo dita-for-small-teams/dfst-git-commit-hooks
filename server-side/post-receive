@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# DITA for Small Teams 
+#
+# Post-receive server-side git hook
+# to update DFST Link Management database
+# with any changes as a result of updates
+# to the repository.
+#--------------------------------------------
+exec ./common/basexLoadOrUpdateBranch &
+#
+# End of script
+#
