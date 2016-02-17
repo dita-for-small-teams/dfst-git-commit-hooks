@@ -4,7 +4,7 @@
 #
 # This is a bash script:
 
-bash ${PWD}/.git/hooks/common/updateBaseXForCommitOrMerge HEAD 'HEAD^'
+bash ${PWD}/.git/hooks/updateBaseXForCommitOrMerge HEAD 'HEAD^'
 #
 # End of script
 #
