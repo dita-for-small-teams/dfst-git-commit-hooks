@@ -2,4 +2,7 @@
 #
 # Post-checkout hook
 #
-bash ${PWD}/.git/hooks/common/basexLoadOrUpdateBranch
+bash ${PWD}/.git/hooks/common/basexLoadOrUpdateBranch&
+#
+# End of script
+#

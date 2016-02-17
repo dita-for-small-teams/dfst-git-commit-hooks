@@ -66,7 +66,7 @@ if [[ "$dbExistsStatus" = "0" ]]
            bash ${GIT_DIR}/hooks/updateBaseXForCommitOrMerge HEAD ${dbCommitHash}
          }      
       fi
-      bash ${GIT_DIR}/hooks/recordGitStateDetails      
+      bash ${GIT_DIR}/hooks/common/recordGitStateDetails      
    } 
    else {
       # See BaseX issue https://github.com/BaseXdb/basex/issues/1112

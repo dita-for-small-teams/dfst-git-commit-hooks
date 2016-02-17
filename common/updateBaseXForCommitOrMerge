@@ -54,7 +54,7 @@ done
 
 # If the foregoing succeed, record the current git state:
 
-bash ${PWD}/.git/hooks/recordGitStateDetails
+bash ${PWD}/.git/hooks/common/recordGitStateDetails
 
 #
 # End of script
