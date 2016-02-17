@@ -6,11 +6,11 @@
 # branch name
 # commit
 #
-baseXUser="admin"
-baseXPW="admin"
-basexPort="1984"
-basexServer="localhost"
-basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
+#baseXUser="admin"
+#baseXPW="admin"
+#basexPort="1984"
+#basexServer="localhost"
+#basexOptions=( -U "$baseXUser" -P "$baseXPW" -p "$basexPort" -n "$basexServer" )
 
 branchName=$(git rev-parse --abbrev-ref HEAD)
 commitHash=$(git rev-parse HEAD)
