@@ -32,6 +32,8 @@ class Updater
   end
   
   def cleanBranchName(branch)
+    # Trim off leading ref/heads:
+    branch.sub!("ref/heads/", "")
     branch.tr('/.', '~_')
   end
   
@@ -58,10 +60,8 @@ class Updater
            puts "Skipping non-XML file"
            next
         end
-        file = File.new("../../" + path, "rb")
-        bytes = file.read
-        file.close
-        # puts "file=/#{bytes}/"
+        bytes = `git cat-file blob #{@to}:#{path}` 
+        # puts "bytes=/#{bytes}/"
         #@basex.add(path, "#{bytes}")
         @basex.execute("check #{dbname}")
         addOrReplaceFile(dbname, path, bytes)
