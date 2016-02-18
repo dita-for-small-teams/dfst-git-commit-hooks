@@ -10,7 +10,9 @@
 #
 # In the context of the docker containers the network details
 # are invariant.
-require 
+puts "Running post-receive..."
+require "./UpdateBasexOnReceive"
+puts "Post-receive done."
 #
 # End of script
 #
