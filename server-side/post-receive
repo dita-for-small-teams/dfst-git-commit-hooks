@@ -36,56 +36,35 @@ class Updater
   end
   
   def getDatabaseNameForBranch(branch)
-       
-       dbName="dfst^#{@repoName}^#{cleanBranchName(branch)}"
-
+      dbName="dfst^#{@repoName}^#{cleanBranchName(branch)}"
   end
   
-  def getMetadataDatabaseNameForBranch(branch)
+  def dbExists(dbname)
+      result = @basex.execute("open #{dbname}")
+      return true
       
-      metadataDbName="_dfst^metadata^#{@repoName}^#{cleanBranchName(branch)}"
+      rescue
+        return false
   end
   
-  def ensureDatabase(dbname)
-  
-     # Correct characters that can't be used
-     # in database names:
-     # The "check" command creates the database if it doesn't exist.
-     puts "ensureDatabase(): Checking database \"#{dbname}\"..."
-     @basex.execute("check #{dbname}")
-     puts "BaseXResult: #{@basex.info}"
-  end
-
-  def update()
-     puts "Updating using #{@from}, #{@to}, #{@branch}"
+  def loadChanges
      dbname = getDatabaseNameForBranch(@branch)
-     metaDbName = getMetadataDatabaseNameForBranch(@branch)
-     ensureDatabase(metaDbName)
-     ensureDatabase(dbname)
-     # git show --pretty="format:" --name-status 
-     # Eliots-MBP:temp ekimber$ git show --pretty="format:" --name-status 
-     # A       test-newname.xml
-     # D       test.xml
-     
-     # Do adds and modifications:
-     # Each line will be the path to a file
+
      changes = `git diff #{@from} #{@to} --name-only --diff-filter=AM`
      
      changes.split(/\n/).each do |path|
         puts "Added or modified file: \"#{path}\""
+        if not path =~ /.+\.(xml|dita|ditamap|ditaval)$/
+           puts "Skipping non-XML file"
+           next
+        end
         file = File.new("../../" + path, "rb")
         bytes = file.read
         file.close
-        puts "file=/#{bytes}/"
+        # puts "file=/#{bytes}/"
         #@basex.add(path, "#{bytes}")
         @basex.execute("check #{dbname}")
-        fileUri = @basex.execute("xquery for $doc in db:open('#{dbname}', '#{path}') return document-uri($doc)")
-        if fileUri != ""
-           puts "File exists in database, deleting..."
-           @basex.execute("delete \"#{path}\"")
-           puts "#{@basex.info()}"
-        end
-        @basex.execute("add to \"#{path}\" \"#{bytes}\"")
+        addOrReplaceFile(dbname, path, bytes)
      end
      
      # Do deletions:
@@ -94,8 +73,49 @@ class Updater
      changes.split(/\n/).each do |path|
         puts "Deleted file: \"#{path}\""
         @basex.execute("delete \"#{path}\"")
-        puts "#{@basex.info()}"
+        # puts "#{@basex.info()}"
      end
+  end
+  
+  def addOrReplaceFile(dbname, path, bytes)
+      #puts "addOrReplaceFile(): path=\"#{path}\""
+      #puts "                    dbname=\"#{dbname}\""
+      fileUri = @basex.execute("xquery for $doc in db:open(\"#{dbname}\", \"#{path}\") return document-uri($doc)")
+      #puts "   query status=#{@basex.info()}"
+      #puts "fileUri=#{fileUri}"
+      if fileUri != ""
+         puts "  File exists in database, deleting..."
+         @basex.execute("delete \"#{path}\"")
+         # puts "  #{@basex.info()}"
+      end
+      puts "   Adding file \"#{path}\" to database #{dbname}..."
+      cmd = "add to \"#{path}\" #{bytes}"
+      @basex.execute(cmd)      
+      puts "   #{@basex.info()}"
+  end
+  
+  def recordGitStateDetails
+     puts "Recording git state details" 
+     metaDbName = getDatabaseNameForBranch(@branch)
+     xmlData=<<-EOS
+<?xml version="1.0" encoding="UTF-8"?>
+<dfst_metadata>
+  <gitstate>
+    <repodir>{unset}</repodir>
+    <repo>#{@repoName}</repo>
+    <branch>#{@branch}</branch>
+    <commit>#{@to}</commit>
+  </gitstate>
+</dfst_metadata>
+     EOS
+     @basex.execute("check #{metaDbName}")
+     addOrReplaceFile(metaDbName, ".dfst/metadata.xml", xmlData)
+  end
+  
+  def update()
+     puts "Updating using #{@from}, #{@to}, #{@branch}"
+     loadChanges
+     recordGitStateDetails
   end
 end
 
@@ -110,12 +130,12 @@ puts "Running post-receive..."
 
 
 STDIN.each do |line|
-   puts "line=/#{line.chomp}/"
+   # puts "line=/#{line.chomp}/"
    from, to, branch, = line.chomp.split(/\s+/)
 
-   puts "from=#{from}"
-   puts "to=#{to}"
-   puts "branch=#{branch}"
+   #puts "from=#{from}"
+   #puts "to=#{to}"
+   #puts "branch=#{branch}"
    updater = Updater.new(from, to, branch, getRepoName())
    updater.update()
 
