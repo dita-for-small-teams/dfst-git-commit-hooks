@@ -50,25 +50,50 @@ class Updater
   
      # Correct characters that can't be used
      # in database names:
-     # This should only create the database if it doesn't
-     # already exist
-     @basex.execute("create db #{dbname}")
+     # The "check" command creates the database if it doesn't exist.
+     puts "ensureDatabase(): Checking database \"#{dbname}\"..."
+     @basex.execute("check #{dbname}")
+     puts "BaseXResult: #{@basex.info}"
   end
 
   def update()
      puts "Updating using #{@from}, #{@to}, #{@branch}"
      dbname = getDatabaseNameForBranch(@branch)
+     metaDbName = getMetadataDatabaseNameForBranch(@branch)
+     ensureDatabase(metaDbName)
      ensureDatabase(dbname)
-     ensureDatabase(getMetadataDatabaseNameForBranch(@branch))
      # git show --pretty="format:" --name-status 
      # Eliots-MBP:temp ekimber$ git show --pretty="format:" --name-status 
      # A       test-newname.xml
      # D       test.xml
-     changes = `git show --pretty="format:" --name-status`
      
-     changes.split(/\n/).each do |line|
-        changeType, path = line.split
-        puts "type=\"#{changeType}\", path=\"#{path}\""
+     # Do adds and modifications:
+     # Each line will be the path to a file
+     changes = `git diff #{@from} #{@to} --name-only --diff-filter=AM`
+     
+     changes.split(/\n/).each do |path|
+        puts "Added or modified file: \"#{path}\""
+        file = File.new("../../" + path, "rb")
+        bytes = file.read
+        file.close
+        puts "file=/#{bytes}/"
+        #@basex.add(path, "#{bytes}")
+        @basex.execute("check #{dbname}")
+        fileUri = @basex.execute("xquery for $doc in db:open('#{dbname}', '#{path}') return document-uri($doc)")
+        if fileUri != ""
+           puts "File exists in database, deleting..."
+           @basex.execute("delete \"#{path}\"")
+           puts "#{@basex.info()}"
+        end
+        @basex.execute("add to \"#{path}\" \"#{bytes}\"")
+     end
+     
+     # Do deletions:
+     changes = `git diff #{@from} #{@to} --name-only --diff-filter=D`
+
+     changes.split(/\n/).each do |path|
+        puts "Deleted file: \"#{path}\""
+        # @basex.execute("CHECK REPLACE #{path} #{topDir}/#{path}")
      end
   end
 end

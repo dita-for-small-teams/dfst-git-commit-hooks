@@ -99,6 +99,11 @@ module BaseXClient
     end
 
     def sendCmd(cmd, arg, input)
+      puts "*** sendCmd():"
+      puts "cmd=#{cmd}"
+      puts "arg=#{arg}"
+      puts "input=#{input}"
+      puts "0.chr=/#{0.chr}/"
       send(cmd + arg + 0.chr + input)
       @info = receive
       if !ok
