@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 #
 # DITA for Small Teams 
 #
@@ -10,9 +10,34 @@
 #
 # In the context of the docker containers the network details
 # are invariant.
+require_relative "./UpdateBaseXOnReceive"
+
+class Updater
+  def initialize(from, to, branch)
+     @from = from
+     @to = to
+     @branch = branch
+  end
+
+  def update()
+     puts "Updating using #{@from}, #{@to}, #{@branch}"
+  end
+end
+
+
 puts "Running post-receive..."
-require "./UpdateBasexOnReceive"
+
+STDIN.each do |line|
+   puts "line=/#{line.chomp}/"
+   from, to, branch, = line.chomp.split(/\s+/)
+
+   puts "from=#{from}"
+   puts "to=#{to}"
+   puts "branch=#{branch}"
+   updater = Updater.new(from, to, branch)
+   updater.update()
+
+end
+
+
 puts "Post-receive done."
-#
-# End of script
-#

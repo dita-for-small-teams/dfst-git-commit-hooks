@@ -7,10 +7,10 @@
 
 require "./BaseXClient"
 
-class BasexUpdater
-  def initialize()
-  end
+
+module BasexUpdater
 end
+
 
    # If database does not exist, create it
    
