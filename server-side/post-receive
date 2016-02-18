@@ -33,7 +33,7 @@ class Updater
   
   def cleanBranchName(branch)
     # Trim off leading ref/heads:
-    branch.sub!("ref/heads/", "")
+    branch.sub!("refs/heads/", "")
     branch.tr('/.', '~_')
   end
   
