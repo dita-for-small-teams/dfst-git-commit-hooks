@@ -93,7 +93,8 @@ class Updater
 
      changes.split(/\n/).each do |path|
         puts "Deleted file: \"#{path}\""
-        # @basex.execute("CHECK REPLACE #{path} #{topDir}/#{path}")
+        @basex.execute("delete \"#{path}\"")
+        puts "#{@basex.info()}"
      end
   end
 end
