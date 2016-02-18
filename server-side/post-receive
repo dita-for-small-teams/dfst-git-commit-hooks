@@ -10,22 +10,78 @@
 #
 # In the context of the docker containers the network details
 # are invariant.
-require_relative "./UpdateBaseXOnReceive"
+
+# For use in container, value should be "linkmgr".
+$BaseXHost="linkmgr"
+
+require_relative "./BaseXClient"
+
+# The grit package appears to be a nice
+# git client but don't really need it
+# for what we're doing here.
+#require 'rubygems'
+#require 'grit'
 
 class Updater
-  def initialize(from, to, branch)
+  def initialize(from, to, branch, repoName)
      @from = from
      @to = to
      @branch = branch
+     @repoName = repoName
+     @basex = BaseXClient::Session.new($BaseXHost, 1984, "admin", "admin")
+  end
+  
+  def cleanBranchName(branch)
+    branch.tr('/.', '~_')
+  end
+  
+  def getDatabaseNameForBranch(branch)
+       
+       dbName="dfst^#{@repoName}^#{cleanBranchName(branch)}"
+
+  end
+  
+  def getMetadataDatabaseNameForBranch(branch)
+      
+      metadataDbName="_dfst^metadata^#{@repoName}^#{cleanBranchName(branch)}"
+  end
+  
+  def ensureDatabase(dbname)
+  
+     # Correct characters that can't be used
+     # in database names:
+     # This should only create the database if it doesn't
+     # already exist
+     @basex.execute("create db #{dbname}")
   end
 
   def update()
      puts "Updating using #{@from}, #{@to}, #{@branch}"
+     dbname = getDatabaseNameForBranch(@branch)
+     ensureDatabase(dbname)
+     ensureDatabase(getMetadataDatabaseNameForBranch(@branch))
+     # git show --pretty="format:" --name-status 
+     # Eliots-MBP:temp ekimber$ git show --pretty="format:" --name-status 
+     # A       test-newname.xml
+     # D       test.xml
+     changes = `git show --pretty="format:" --name-status`
+     
+     changes.split(/\n/).each do |line|
+        changeType, path = line.split
+        puts "type=\"#{changeType}\", path=\"#{path}\""
+     end
   end
 end
 
+def getRepoName
+  parts = `pwd`.split('/')
+  repoName = parts[parts.length - 3]
+end
 
 puts "Running post-receive..."
+
+
+
 
 STDIN.each do |line|
    puts "line=/#{line.chomp}/"
@@ -34,7 +90,7 @@ STDIN.each do |line|
    puts "from=#{from}"
    puts "to=#{to}"
    puts "branch=#{branch}"
-   updater = Updater.new(from, to, branch)
+   updater = Updater.new(from, to, branch, getRepoName())
    updater.update()
 
 end
