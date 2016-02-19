@@ -85,10 +85,6 @@ class Updater
         @basex.execute(cmd)
         addOrReplaceFile(dbname, path, bytes)
         
-        rescue RuntimeError => e
-          puts "[WARN] Runtime error doing BaseX command: #{e.message}" 
-          puts "[WARN] Command=\"#{cmd}\""
-        
      end
      
      # Do deletions:
