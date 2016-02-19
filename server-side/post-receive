@@ -41,6 +41,14 @@ class Updater
       dbName="dfst^#{@repoName}^#{cleanBranchName(branch)}"
   end
   
+  def getMetadataDatabaseNameForBranch(branch)
+      dbName="_dfst^metadata^#{@repoName}^#{cleanBranchName(branch)}"
+  end
+  
+  def ensureMetadataDatabase
+      @basex.execute("check #{getMetadataDatabaseNameForBranch(@branch)}")
+  end
+  
   def dbExists(dbname)
       result = @basex.execute("open #{dbname}")
       return true
@@ -114,15 +122,22 @@ class Updater
   
   def update()
      puts "Updating using #{@from}, #{@to}, #{@branch}"
+     ensureMetadataDatabase
      loadChanges
      recordGitStateDetails
   end
 end
 
 def getRepoName
+  # Note that the script is run from the repo directory,
+  # not, the custom_scripts directory.
   parts = `pwd -L`.chomp.split('/')
-  repoName = parts[parts.length - 2]
+  puts "getRepoName(): parts=#{parts}"
+  repoName = parts[parts.length - 1]
+  puts "[1] repoName=#{repoName}"
   repoName.sub!(".git", "")
+  puts "[2] repoName=#{repoName}"
+  return repoName
 end
 
 puts "Running post-receive..."
