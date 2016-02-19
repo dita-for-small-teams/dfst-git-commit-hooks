@@ -120,8 +120,9 @@ class Updater
 end
 
 def getRepoName
-  parts = `pwd`.split('/')
-  repoName = parts[parts.length - 3]
+  parts = `pwd`.chomp.split('/')
+  repoName = parts[parts.length - 2]
+  repoName.sub!(".git", "")
 end
 
 puts "Running post-receive..."
