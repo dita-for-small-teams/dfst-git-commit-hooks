@@ -120,7 +120,7 @@ class Updater
 end
 
 def getRepoName
-  parts = `pwd`.chomp.split('/')
+  parts = `pwd -L`.chomp.split('/')
   repoName = parts[parts.length - 2]
   repoName.sub!(".git", "")
 end
