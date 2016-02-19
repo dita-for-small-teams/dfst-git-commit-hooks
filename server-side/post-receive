@@ -25,6 +25,11 @@ require_relative "./BaseXClient"
 class Updater
   def initialize(from, to, branch, repoName)
      @from = from
+     # Get the magic hash for empty directories:
+     if @from =~ /^000000/
+        @from = `git hash-object -t tree --stdin < /dev/null`
+        @from.chomp!
+     end     
      @to = to
      @branch = branch
      @repoName = repoName
@@ -46,7 +51,12 @@ class Updater
   end
   
   def ensureMetadataDatabase
-      @basex.execute("check #{getMetadataDatabaseNameForBranch(@branch)}")
+      cmd="check #{getMetadataDatabaseNameForBranch(@branch)}"
+      @basex.execute(cmd)
+      
+      rescue RuntimeError
+        puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
+
   end
   
   def dbExists(dbname)
@@ -71,8 +81,14 @@ class Updater
         bytes = `git cat-file blob #{@to}:#{path}` 
         # puts "bytes=/#{bytes}/"
         #@basex.add(path, "#{bytes}")
-        @basex.execute("check #{dbname}")
+        cmd = "check #{dbname}"
+        @basex.execute(cmd)
         addOrReplaceFile(dbname, path, bytes)
+        
+        rescue RuntimeError => e
+          puts "[WARN] Runtime error doing BaseX command: #{e.message}" 
+          puts "[WARN] Command=\"#{cmd}\""
+        
      end
      
      # Do deletions:
@@ -100,6 +116,9 @@ class Updater
       cmd = "add to \"#{path}\" #{bytes}"
       @basex.execute(cmd)      
       puts "   #{@basex.info()}"
+      
+      rescue RuntimeError
+        puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
   end
   
   def recordGitStateDetails
@@ -116,8 +135,13 @@ class Updater
   </gitstate>
 </dfst_metadata>
      EOS
-     @basex.execute("check #{metaDbName}")
+     cmd = "check #{metaDbName}"
+     @basex.execute(cmd)
      addOrReplaceFile(metaDbName, ".dfst/metadata.xml", xmlData)
+     
+     rescue RuntimeError
+        puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
+
   end
   
   def update()
