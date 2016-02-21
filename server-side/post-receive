@@ -140,11 +140,23 @@ class Updater
 
   end
   
+  def updateIndexes
+     dbName = getDatabaseNameForBranch(@branch)
+
+     cmd = "open #{dbName}"
+     @basex.execute(cmd)
+     puts "*** Updating fulltext index for database #{dbName}"
+     @basex.execute("create index fulltext")
+
+  end
+  
+  
   def update()
      puts "Updating using #{@from}, #{@to}, #{@branch}"
      ensureMetadataDatabase
      loadChanges
      recordGitStateDetails
+     updateIndexes
   end
 end
 
@@ -162,9 +174,6 @@ end
 
 puts "Running post-receive..."
 
-
-
-
 STDIN.each do |line|
    # puts "line=/#{line.chomp}/"
    from, to, branch, = line.chomp.split(/\s+/)
@@ -176,6 +185,5 @@ STDIN.each do |line|
    updater.update()
 
 end
-
 
 puts "Post-receive done."
