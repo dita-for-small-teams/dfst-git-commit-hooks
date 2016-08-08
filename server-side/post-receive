@@ -154,8 +154,8 @@ class Updater
   def update()
      puts "Updating using #{@from}, #{@to}, #{@branch}"
      ensureMetadataDatabase
-     loadChanges
      recordGitStateDetails
+     loadChanges
      updateIndexes
   end
 end
