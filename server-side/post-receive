@@ -109,7 +109,7 @@ class Updater
          # puts "  #{@basex.info()}"
       end
       puts "   Adding file \"#{path}\" to database #{dbname}..."
-      cmd = "set CATFILE=/opt/dita-ot/DITA-OT/catalog-dita.xml;set DTD=true;set CHOP=false;set SKIPCORRUPT=true;add to \"#{path}\" #{bytes}"
+      cmd = "add to \"#{path}\" #{bytes}"
       @basex.execute(cmd)      
       puts "   #{@basex.info()}"
       
