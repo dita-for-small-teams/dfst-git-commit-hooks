@@ -43,11 +43,11 @@ class Updater
   end
   
   def getDatabaseNameForBranch(branch)
-      dbName="dfst^#{@repoName}^#{cleanBranchName(branch)}"
+      dbName="d4st^#{@repoName}^#{cleanBranchName(branch)}"
   end
   
   def getMetadataDatabaseNameForBranch(branch)
-      dbName="_dfst^metadata^#{@repoName}^#{cleanBranchName(branch)}"
+      dbName="_d4st^metadata^#{@repoName}^#{cleanBranchName(branch)}"
   end
   
   def ensureMetadataDatabase
@@ -122,18 +122,18 @@ class Updater
      metaDbName = getDatabaseNameForBranch(@branch)
      xmlData=<<-EOS
 <?xml version="1.0" encoding="UTF-8"?>
-<dfst_metadata>
+<d4st_metadata>
   <gitstate>
     <repodir>{unset}</repodir>
     <repo>#{@repoName}</repo>
     <branch>#{@branch}</branch>
     <commit>#{@to}</commit>
   </gitstate>
-</dfst_metadata>
+</d4st_metadata>
      EOS
      cmd = "check #{metaDbName}"
      @basex.execute(cmd)
-     addOrReplaceFile(metaDbName, ".dfst/metadata.xml", xmlData)
+     addOrReplaceFile(metaDbName, ".d4st/metadata.xml", xmlData)
      
      rescue RuntimeError
         puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
