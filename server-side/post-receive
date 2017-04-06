@@ -133,7 +133,7 @@ class Updater
      EOS
      cmd = "check #{metaDbName}"
      @basex.execute(cmd)
-     addOrReplaceFile(metaDbName, ".d4st/metadata.xml", xmlData)
+     addOrReplaceFile(metaDbName, "_d4st/metadata.xml", xmlData)
      
      rescue RuntimeError
         puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
