@@ -100,6 +100,7 @@ class Updater
   def addOrReplaceFile(dbname, path, bytes)
       #puts "addOrReplaceFile(): path=\"#{path}\""
       #puts "                    dbname=\"#{dbname}\""
+      path.tr(' ', '%20')
       fileUri = @basex.execute("xquery for $doc in db:open(\"#{dbname}\", \"#{path}\") return document-uri($doc)")
       #puts "   query status=#{@basex.info()}"
       #puts "fileUri=#{fileUri}"
