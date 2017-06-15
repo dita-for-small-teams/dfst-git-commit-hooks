@@ -127,7 +127,8 @@ class Updater
         @basex.execute(cmd)
         puts "   #{@basex.info()}"
       else
-        `curl -X POST -d "path=#{path}&to=#{@to}" localhost:1984/update`
+        puts "Posting changed file #{path} "
+        `curl -X POST -d "dbName='#{dbName}'&path='#{path}'" localhost:8984/update`
       end
 
       rescue RuntimeError
