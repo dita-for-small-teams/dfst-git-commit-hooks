@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 #
-# DITA for Small Teams 
+# DITA for Small Teams
 #
 # Post-receive server-side git hook
 # to update D4ST Link Management database
@@ -29,64 +29,67 @@ class Updater
      if @from =~ /^000000/
         @from = `git hash-object -t tree --stdin < /dev/null`
         @from.chomp!
-     end     
+     end
      @to = to
      @branch = branch
      @repoName = repoName
      @basex = BaseXClient::Session.new($BaseXHost, 1984, "admin", "admin")
   end
-  
+
   def cleanBranchName(branch)
     # Trim off leading ref/heads:
     branch.sub!("refs/heads/", "")
     branch.tr('/.', '~_')
   end
-  
+
   def getDatabaseNameForBranch(branch)
       dbName="d4st^#{@repoName}^#{cleanBranchName(branch)}"
   end
-  
+
   def getMetadataDatabaseNameForBranch(branch)
       dbName="_d4st^metadata^#{@repoName}^#{cleanBranchName(branch)}"
   end
-  
+
   def ensureMetadataDatabase
       cmd="check #{getMetadataDatabaseNameForBranch(@branch)}"
       @basex.execute(cmd)
-      
+
       rescue RuntimeError
         puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
 
   end
-  
+
   def dbExists(dbname)
       result = @basex.execute("open #{dbname}")
       return true
-      
+
       rescue
         return false
   end
-  
+
+  # invokes git to pull changed files for upload to basex
   def loadChanges
      dbname = getDatabaseNameForBranch(@branch)
 
      changes = `git diff #{@from} #{@to} --name-only --diff-filter=AM`
-     
+
      changes.split(/\n/).each do |path|
         puts "Added or modified file: \"#{path}\""
         if not path =~ /.+\.(xml|dita|ditamap|ditaval)$/
            puts "Skipping non-XML file"
            next
         end
-        bytes = `git cat-file blob #{@to}:#{path}` 
+
+        #bytes = `git cat-file blob #{@to}:#{path}`
         # puts "bytes=/#{bytes}/"
         #@basex.add(path, "#{bytes}")
         cmd = "check #{dbname}"
         @basex.execute(cmd)
-        addOrReplaceFile(dbname, path, bytes)
-        
+        #addOrReplaceFile(dbname, path, bytes)
+        addOrReplaceFile(dbname, path)
+
      end
-     
+
      # Do deletions:
      changes = `git diff #{@from} #{@to} --name-only --diff-filter=D`
 
@@ -96,8 +99,13 @@ class Updater
         # puts "#{@basex.info()}"
      end
   end
-  
-  def addOrReplaceFile(dbname, path, bytes)
+
+  # @param dbname [String] name of DB in which file is to be saved
+  # @param path [String] path of file
+  # @param bytes [String] file content, should be XML format; when file is of
+  # => non-trivial size (i.e. not metadata), this argument is optional; basex
+  # => server will pull file from its end to avoid blocking this script
+  def addOrReplaceFile(dbname, path, bytes=nil)
       #puts "addOrReplaceFile(): path=\"#{path}\""
       #puts "                    dbname=\"#{dbname}\""
       path.tr(' ', '%20')
@@ -109,17 +117,25 @@ class Updater
          @basex.execute("delete \"#{path}\"")
          # puts "  #{@basex.info()}"
       end
-      puts "   Adding file \"#{path}\" to database #{dbname}..."
-      cmd = "add to \"#{path}\" #{bytes}"
-      @basex.execute(cmd)      
-      puts "   #{@basex.info()}"
-      
+
+      # byte should only be non-nil when it holds metadata;
+      # for content files, BaseX server receives path and @to commit hash
+      # to pull file from its end
+      if bytes
+        puts "   Adding file \"#{path}\" to database #{dbname}..."
+        cmd = "add to \"#{path}\" #{bytes}"
+        @basex.execute(cmd)
+        puts "   #{@basex.info()}"
+      else
+        `curl -X POST -d "path=#{path}&to=#{@to}" localhost:1984/update`
+      end
+
       rescue RuntimeError
         puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
   end
-  
+
   def recordGitStateDetails
-     puts "Recording git state details" 
+     puts "Recording git state details"
      metaDbName = getDatabaseNameForBranch(@branch)
      xmlData=<<-EOS
 <?xml version="1.0" encoding="UTF-8"?>
@@ -135,12 +151,13 @@ class Updater
      cmd = "check #{metaDbName}"
      @basex.execute(cmd)
      addOrReplaceFile(metaDbName, "_d4st/metadata.xml", xmlData)
-     
+
      rescue RuntimeError
         puts "[WARN] Runtime error doing BaseX command \"#{cmd}\""
 
   end
-  
+
+# TODO assess method performance if offshoring #loadChanges is not sufficient
   def updateIndexes
      dbName = getDatabaseNameForBranch(@branch)
 
@@ -150,8 +167,8 @@ class Updater
      @basex.execute("create index fulltext")
 
   end
-  
-  
+
+
   def update()
      puts "Updating using #{@from}, #{@to}, #{@branch}"
      ensureMetadataDatabase
