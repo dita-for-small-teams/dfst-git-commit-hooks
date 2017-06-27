@@ -67,10 +67,6 @@ class Updater
         return false
   end
 
-  def getGitURL(path)
-    "http://gitlab-d4st/root/#{@repoName}/blob/#{@branch}/#{path}"
-  end
-
   # invokes git to pull changed files for upload to basex
   def loadChanges
      dbname = getDatabaseNameForBranch(@branch)
@@ -131,7 +127,8 @@ class Updater
         @basex.execute(cmd)
         puts "   #{@basex.info()}"
       else
-        `curl -i -X POST -d "gitURL='#{getGitURL(path)}'&dbname='#{dbname}'" #{$BaseXHost}:8984/update`
+        urlPath = path.gsub(/[\/\.]/,{'/' => '%2F', '.' => '%2E'})
+        `curl -i -X POST -d "urlPath='#{urlPath}'&repoName='#{@repoName}'&branch='#{@branch}'&dbname='#{dbname}'" #{$BaseXHost}:8984/update`
       end
 
       rescue RuntimeError
